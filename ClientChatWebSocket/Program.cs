@@ -3,13 +3,43 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Text;
 
+#region BIRDS_NAMES
+string[] birds = new string[]
+{
+    "Canário",
+    "Papagaio",
+    "Arara",
+    "Beija-flor",
+    "Pica-pau",
+    "Coruja",
+    "Rouxinol",
+    "Pardal",
+    "Tucano",
+    "Gaivota",
+    "Andorinha",
+    "Sabiá",
+    "Colibri",
+    "Falcão",
+    "Gavião",
+    "Pomba",
+    "Marreco",
+    "Ema",
+    "Faisão",
+    "Pinguim",
+    "Trinca-ferro",
+    "Pato",
+    "Codorna",
+    "Bem-te-vi",
+    "Curió"
+};
+#endregion
+
 Console.OutputEncoding = Encoding.UTF8;
 Console.WriteLine("=== CHAT TCP com Cifras Clássicas ===\n");
 Console.Write("Seu nome: ");
 string name = Console.ReadLine()!.Trim();
-if (string.IsNullOrWhiteSpace(name)) name = "Anônimo";
+if (string.IsNullOrWhiteSpace(name)) name = GetUserName(birds);
 
-Console.Write("IP do servidor (ex: 192.168.15.13): ");
 string ip = "localhost";
 int port = 5124;
 
@@ -135,6 +165,13 @@ static async Task WriteFramedAsync(NetworkStream stream, string json)
     await stream.WriteAsync(len);
     await stream.WriteAsync(data);
     await stream.FlushAsync();
+}
+
+static string GetUserName(string[] birds)
+{
+    int number = new Random().Next(0, birds.Length);
+
+    return birds[number];
 }
 
 public record ChatMessage(string Cipher, string Sender, string Payload);
