@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 
 #region BIRDS_NAMES
 string[] birds = new string[]
@@ -115,7 +116,20 @@ static string AskKey(string id)
     {
         case "caesar":
             Console.Write("Chave (deslocamento inteiro, ex: 3): ");
-            return Console.ReadLine()!.Trim();
+
+            while (true) 
+            {
+                string key = Console.ReadLine()!.Trim();
+
+                if(!string.IsNullOrEmpty(key) && ValidatorCaesar(key))
+                {
+                    return key;
+                }
+
+                Console.WriteLine("Chave inválida! Informe um número inteiro (ex: 3).");
+                Console.Write("Chave: ");
+            };
+
         case "mono":
             Console.WriteLine("\nChave da Substituição Monoalfabética:\n- Você pode informar UM ALFABETO de 26 letras (permutação)\n  OU uma palavra-chave (será expandida para o alfabeto). Ex: 'SEGURANCA'\n");
             Console.Write("Chave: ");
@@ -172,6 +186,13 @@ static string GetUserName(string[] birds)
     int number = new Random().Next(0, birds.Length);
 
     return birds[number];
+}
+
+static bool ValidatorCaesar(string key)
+{
+    Regex hasLetters = new Regex("[A-Za-z]");
+
+    return !hasLetters.IsMatch(key);
 }
 
 public record ChatMessage(string Cipher, string Sender, string Payload);
