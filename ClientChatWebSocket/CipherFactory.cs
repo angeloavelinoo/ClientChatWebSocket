@@ -10,6 +10,7 @@ public class CipherFactory
         "mono" => new MonoalphabeticCipher(),
         "playfair" => new PlayfairCipher(),
         "vigenere" => new VigenereCipher(),
+        "rc4" => new Rc4Cipher(),
         _ => new VigenereCipher(),
     };
 
@@ -229,6 +230,65 @@ public class CipherFactory
                 ki++;
             }
             return sb.ToString();
+        }
+    }
+
+    public class Rc4Cipher : ICipher
+    {
+        public string Encrypt(string plain, string key)
+        {
+            var pt = Encoding.UTF8.GetBytes(plain);
+            var kb = Encoding.UTF8.GetBytes(key);
+            var ct = Rc4(pt, kb);
+            return string.Join(",", ct.Select(b => b.ToString()));
+        }
+
+        public string Decrypt(string cipher, string key)
+        {
+            var kb = Encoding.UTF8.GetBytes(key);
+            var ct = ParseCsvBytes(cipher);
+            var pt = Rc4(ct, kb);
+            return Encoding.UTF8.GetString(pt);
+        }
+
+        static byte[] Rc4(byte[] data, byte[] key)
+        {
+            if (key.Length == 0 || key.Length > 256)
+                throw new ArgumentException("Chave RC4 deve ter 1..256 bytes");
+
+            byte[] S = new byte[256];
+            for (int i = 0; i < 256; i++) S[i] = (byte)i;
+            int j = 0;
+            for (int i = 0; i < 256; i++)
+            {
+                j = (j + S[i] + key[i % key.Length]) & 0xFF;
+                (S[i], S[j]) = (S[j], S[i]);
+            }
+
+            int i1 = 0, j1 = 0;
+            var output = new byte[data.Length];
+            for (int k = 0; k < data.Length; k++)
+            {
+                i1 = (i1 + 1) & 0xFF;
+                j1 = (j1 + S[i1]) & 0xFF;
+                (S[i1], S[j1]) = (S[j1], S[i1]);
+                byte K = S[(S[i1] + S[j1]) & 0xFF];
+                output[k] = (byte)(data[k] ^ K);
+            }
+            return output;
+        }
+
+        static byte[] ParseCsvBytes(string s)
+        {
+            var parts = s.Split(new[] { ',', ' ', ';', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            var list = new List<byte>(parts.Length);
+            foreach (var p in parts)
+            {
+                if (!byte.TryParse(p, out var b))
+                    throw new ArgumentException("Payload RC4 inválido. Use CSV de números 0..255.");
+                list.Add(b);
+            }
+            return list.ToArray();
         }
     }
 }
