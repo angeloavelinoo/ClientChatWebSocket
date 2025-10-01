@@ -44,7 +44,7 @@ if (string.IsNullOrWhiteSpace(name)) name = GetUserName(birds);
 string ip = "localhost";
 int port = 5124;
 
-Console.WriteLine("\nEscolha a cifra:\n 1) César\n 2) Substituição Monoalfabética\n 3) Playfair\n 4) Vigenère\n 5) RCFOUR\n");
+Console.WriteLine("\nEscolha a cifra:\n 1) César\n 2) Substituição Monoalfabética\n 3) Playfair\n 4) Vigenère\n 5) RCFOUR\n 6) DES\n");
 Console.Write("Opção: ");
 string opt = Console.ReadLine()!.Trim();
 string cipherId = opt switch
@@ -54,6 +54,7 @@ string cipherId = opt switch
     "3" => "playfair",
     "4" => "vigenere",
     "5" => "rc4",
+    "6" => "des",
     _ => "vigenere"
 };
 
@@ -142,6 +143,10 @@ static string AskKey(string id)
         case "rc4":
             Console.Write("Chave RC4 (1–256 bytes; pode ser texto UTF-8): ");
             return Console.ReadLine()!.Trim();
+        case "des":
+            Console.Write("Chave DES (16 hex ex: 133457799BBCDFF1) ou 8 chars ASCII: ");
+            return Console.ReadLine()!.Trim();
+
         default:
             Console.Write("Chave (palavra/frase): ");
             return Console.ReadLine()!.Trim();
