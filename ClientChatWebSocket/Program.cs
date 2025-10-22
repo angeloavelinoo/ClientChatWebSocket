@@ -44,7 +44,7 @@ if (string.IsNullOrWhiteSpace(name)) name = GetUserName(birds);
 string ip = "localhost";
 int port = 5124;
 
-Console.WriteLine("\nEscolha a cifra:\n 1) César\n 2) Substituição Monoalfabética\n 3) Playfair\n 4) Vigenère\n 5) RCFOUR\n 6) DES\n");
+Console.WriteLine("\nEscolha a cifra:\n 1) César\n 2) Substituição Monoalfabética\n 3) Playfair\n 4) Vigenère\n 5) RCFOUR\n 6) DES\n 7) AES\n");
 Console.Write("Opção: ");
 string opt = Console.ReadLine()!.Trim();
 string cipherId = opt switch
@@ -55,6 +55,7 @@ string cipherId = opt switch
     "4" => "vigenere",
     "5" => "rc4",
     "6" => "des",
+    "7" => "aes",
     _ => "vigenere"
 };
 
@@ -145,6 +146,14 @@ static string AskKey(string id)
             return Console.ReadLine()!.Trim();
         case "des":
             Console.Write("Chave DES (16 hex ex: 133457799BBCDFF1) ou 8 chars ASCII: ");
+            return Console.ReadLine()!.Trim();
+
+        case "aes":
+            Console.WriteLine("Chave AES: use um dos formatos abaixo:");
+            Console.WriteLine("  • HEX: <KEY_HEX>|<IV_HEX> (ex.: 001122...|AABBCC...)");
+            Console.WriteLine("  • Somente KEY_HEX (16/24/32 bytes); IV será derivado");
+            Console.WriteLine("  • Texto livre (senha); chave 256 bits e IV serão derivados");
+            Console.Write("Chave: ");
             return Console.ReadLine()!.Trim();
 
         default:
