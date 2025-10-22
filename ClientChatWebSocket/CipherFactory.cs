@@ -1,6 +1,4 @@
-﻿using System.Security.Cryptography;
-using System.Text;
-using static ClientChatWebSocket.CipherFactory;
+﻿using System.Text;
 
 namespace ClientChatWebSocket;
 
@@ -14,7 +12,6 @@ public class CipherFactory
         "vigenere" => new VigenereCipher(),
         "rc4" => new Rc4Cipher(),
         "des" => new DesCipher(),
-        "aes" => new AesCipher(),
         _ => new VigenereCipher(),
     };
 
@@ -599,106 +596,6 @@ public class CipherFactory
             for (int i = 0; i < res.Length; i++)
                 res[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
             return res;
-        }
-    }
-
-
-    public class AesCipher : ICipher
-    {
-        public string Encrypt(string plain, string key)
-        {
-            var pt = Encoding.UTF8.GetBytes(plain);
-            var (k, iv) = DeriveKeyAndIv(key);
-
-            using var aes = Aes.Create();
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            aes.Key = k;
-            aes.IV = iv;
-
-            using var enc = aes.CreateEncryptor();
-            var ct = enc.TransformFinalBlock(pt, 0, pt.Length);
-            return Convert.ToHexString(ct);
-        }
-
-        public string Decrypt(string cipher, string key)
-        {
-            var ct = ParseHex(cipher);
-            var (k, iv) = DeriveKeyAndIv(key);
-
-            using var aes = Aes.Create();
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
-            aes.Key = k;
-            aes.IV = iv;
-
-            using var dec = aes.CreateDecryptor();
-            var pt = dec.TransformFinalBlock(ct, 0, ct.Length);
-            return Encoding.UTF8.GetString(pt);
-        }
-
-        static (byte[] Key, byte[] Iv) DeriveKeyAndIv(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-                throw new ArgumentException("Chave AES vazia.");
-
-            int bar = input.IndexOf('|');
-            if (bar >= 0)
-            {
-                var keyHex = input.Substring(0, bar).Trim();
-                var ivHex = input.Substring(bar + 1).Trim();
-                var k = ParseHex(keyHex);
-                var iv = ParseHex(ivHex);
-                ValidateKeyLen(k);
-                if (iv.Length != 16) throw new ArgumentException("IV deve ter 16 bytes (32 hex).");
-                return (k, iv);
-            }
-
-            if (LooksLikeHex(input))
-            {
-                var k = ParseHex(input);
-                ValidateKeyLen(k);
-                var iv = Sha256(Encoding.UTF8.GetBytes("iv:" + input)).Take(16).ToArray();
-                return (k, iv);
-            }
-
-            var passBytes = Encoding.UTF8.GetBytes(input);
-            var fullK = Sha256(passBytes);
-            var ivDer = Sha256(Encoding.UTF8.GetBytes("iv:" + input)).Take(16).ToArray();
-            return (fullK, ivDer);
-        }
-
-        static void ValidateKeyLen(byte[] k)
-        {
-            if (k.Length is not (16 or 24 or 32))
-                throw new ArgumentException("Tamanho de chave inválido. Use 16/24/32 bytes (128/192/256 bits).");
-        }
-
-        static bool LooksLikeHex(string s)
-        {
-            var cleaned = new string(s.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            if (cleaned.Length % 2 != 0) return false;
-            return cleaned.All(c => Uri.IsHexDigit(c));
-        }
-
-        static byte[] ParseHex(string hex)
-        {
-            var cleaned = new string(hex.Where(c => !char.IsWhiteSpace(c)).ToArray());
-            if (cleaned.Length % 2 != 0)
-                throw new ArgumentException("HEX inválido.");
-
-            var bytes = new byte[cleaned.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                bytes[i] = Convert.ToByte(cleaned.Substring(2 * i, 2), 16);
-            }
-            return bytes;
-        }
-
-        static byte[] Sha256(byte[] data)
-        {
-            using var sha = SHA256.Create();
-            return sha.ComputeHash(data);
         }
     }
 }
